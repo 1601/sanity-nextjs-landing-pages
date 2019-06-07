@@ -23,3 +23,20 @@ body,
 :global(.content) {
   min-height: calc(100% - 84px - 218px);
 }
+
+#TopMenuWrapper {
+  background: #1c202b;
+  padding: 8px 0;
+  border-bottom: 2px solid #6bbfdb;
+}
+
+#TopMenuWrapper .container {
+  width: 100%;
+  max-width: 1142px;
+}
+
+#TopMenuWrapper .col-md-12 {
+  width: 100%;
+  float: left;
+}
+
