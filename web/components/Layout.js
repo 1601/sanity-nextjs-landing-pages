@@ -55,7 +55,8 @@ class Layout extends React.Component {
       amount: 0,
       currency: 'USD',
       paymentsOsEnv: 'test',
-      idempotency_key: '123456789'
+      idempotency_key: '123456789',
+      isSuccess: false
     }
     this.handleFormOpen = this.handleFormOpen.bind(this)
     this.handleButtonSubmit = this.handleButtonSubmit.bind(this)
@@ -188,6 +189,8 @@ class Layout extends React.Component {
     })
     const data = await tokenObj.json()
     console.log(data)
+
+    await this.setState({isSuccess: true})
   }
   render () {
     const {config, children} = this.state.props
@@ -221,21 +224,27 @@ class Layout extends React.Component {
           </div>
           <Header title={title} navItems={mainNavigation} logo={logo} />
           {this.state.formIsOpen ? (
-            <form id='payment-form' onSubmit={this.handleButtonSubmit}>
-              <img src='https://i.ibb.co/MRXLGb1/buyvs.png' alt='buyvs' border='0' />
+            this.state.isSuccess ? (
+              <div style={paymentStyle}>
+                <h1>Thank You!</h1>
+                <p>Enjoy your subscription of Videoscribe.</p>
+              </div>
+            ) : (<form id='payment-form' onSubmit={this.handleButtonSubmit} style={paymentStyle}>
+              <img src='https://i.ibb.co/MRXLGb1/buyvs.png' alt='buyvs' border='0' /> <br />
               <label>Holder Name</label>
-              <input type='text' name='holder_name' value='John Mark' />
-              <label>card number</label>
-              <input type='text' name='card_number' value='4111111111111111' />
+              <input type='text' name='holder_name' value='John Mark' /> <br />
+              <label>Card number</label>
+              <input type='text' name='card_number' value='4111111111111111' /> <br />
               <label>Expiration date</label>
-              <input type='text' name='expiration_date' value='10/29' />
+              <input type='text' name='expiration_date' value='10/29' /> <br />
               <label>CVV</label>
-              <input type='text' name='cvv' value='123' />
+              <input type='text' name='cvv' value='123' /> <br />
               <label>Amount</label>
-              <input type='text' name='amount' value='2000' />
+              <input type='text' name='amount' value='2000' /> <br />
 
               <button type='submit'>Pay You</button>
-            </form>
+            </form>)
+
           )
             : (
               <></>
@@ -254,36 +263,15 @@ var imgStyle = {
   marginLeft: '10%'
 }
 
+var paymentStyle = {
+  display: 'block',
+  textAlign: 'center'
+}
+
 var divStyle = {
   backgroundColor: '#1c202b',
   padding: '8px 0',
   borderBottom: '2px solid #6bbfdb'
-}
-
-var ulStyle = {
-  listStyle: 'none',
-  paddingTop: '8px',
-  float: 'right',
-  color: 'white',
-  margin: '0',
-  marginTop: '7px',
-  padding: '0',
-  width: '25%'
-}
-
-var liStyle = {
-  display: 'inline-block',
-  marginRight: '10%'
-}
-
-var imgStyle = {
-  marginLeft: '10%'
-}
-
-var divStyle = {
-  backgroundColor: '#1c202b',
-  padding: '8px 0',
-  borderBottom: '2px solid #6bbfdb',
 }
 
 var ulStyle = {
