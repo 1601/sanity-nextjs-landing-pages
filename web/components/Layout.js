@@ -276,6 +276,32 @@ var liStyle = {
   marginRight: '10%'
 }
 
+var imgStyle = {
+  marginLeft: '10%'
+}
+
+var divStyle = {
+  backgroundColor: '#1c202b',
+  padding: '8px 0',
+  borderBottom: '2px solid #6bbfdb',
+}
+
+var ulStyle = {
+  listStyle: 'none',
+  paddingTop: '8px',
+  float: 'right',
+  color: 'white',
+  margin: '0',
+  marginTop: '7px',
+  padding: '0',
+  width: '25%'
+}
+
+var liStyle = {
+  display: 'inline-block',
+  marginRight: '10%'
+}
+
 Layout.propTypes = {
   // eslint-disable-next-line react/no-unused-prop-types
   children: PropTypes.arrayOf(PropTypes.node),
