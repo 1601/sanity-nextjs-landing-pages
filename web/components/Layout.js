@@ -58,7 +58,10 @@ class Layout extends React.Component {
       order_id:'VS-SPARKOL-1',
       customer_id:'',
       paymentsOsEnv: 'test',
-      idempotency_key: '123456789'
+      idempotency_key: '123456789',
+      isSuccess: false,
+      isProcessing:false,
+      
     }
     this.handleFormOpen = this.handleFormOpen.bind(this)
     this.handleButtonSubmit = this.handleButtonSubmit.bind(this)
@@ -68,6 +71,9 @@ class Layout extends React.Component {
     // this.charges = this.charges.bind(this)
     this.createCustomer = this.createCustomer.bind(this)
     this.capture = this.capture.bind(this)
+
+
+    
   }
 
   handleFormOpen (e) {
@@ -77,6 +83,8 @@ class Layout extends React.Component {
 
   async handleButtonSubmit (e) {
     e.preventDefault()
+     //triggered processing 
+     this.setState({isProcessing:true})
     // passing the value from the form to state
     console.log(e.target.card_number.value)
     await this.setState({
@@ -95,6 +103,7 @@ class Layout extends React.Component {
 
   async tokenize () {
     console.log(this.state)
+   
     const tokenObj = await fetch('https://api.paymentsos.com/tokens', {
       method: 'POST',
       headers: {
@@ -235,6 +244,7 @@ class Layout extends React.Component {
     })
     const data = await tokenObj.json()
     console.log(data)
+    this.setState({isSuccess:true})
   }
   render () {
     const {config, children} = this.state.props
@@ -268,28 +278,29 @@ class Layout extends React.Component {
           </div>
           <Header title={title} navItems={mainNavigation} logo={logo} />
           {this.state.formIsOpen ? (
-            <form id='payment-form' onSubmit={this.handleButtonSubmit}>
-              <img src='https://i.ibb.co/MRXLGb1/buyvs.png' alt='buyvs' border='0' />
-              <label>Holder Name</label>
-              <input type='text' name='holder_name' value='John Mark' />
-              <label>card number</label>
-              <input type='text' name='card_number' value='4111111111111111' />
-              <label>Expiration date</label>
-              <input type='text' name='expiration_date' value='10/29' />
-              <label>CVV</label>
-              <input type='text' name='cvv' value='123' />
-              <label>Email</label>
-              <input type="text" name="email" value='leonardolouie30@gmail.com'/>
-              <label>Plan</label>
-              <select name="plan">
-              <option value="Monthly-Plan">Monthly Plan</option>
-              <option value="Yearly-Plan">Yearly Plan</option>
-              <option value="One-Off">One-Off</option>
-             </select>
-              <label>Amount</label>
-              <input type='text' name='amount' value='2000' />
-              <button type='submit'>Pay You</button>
-            </form>
+            this.state.isProcessing ? (this.state.isSuccess ?  (<div>Thank you for subscribing to videoscribe </div>) : (<div style={{fontSize:15}}> Your Payment is on process..... kindly wait please</div>)): (<form id='payment-form' onSubmit={this.handleButtonSubmit}>
+            <img src='https://i.ibb.co/MRXLGb1/buyvs.png' alt='buyvs' border='0' />
+    
+            <label>Holder Name</label>
+            <input type='text' name='holder_name' value='John Mark' />
+            <label>card number</label>
+            <input type='text' name='card_number' value='4111111111111111' />
+            <label>Expiration date</label>
+            <input type='text' name='expiration_date' value='10/29' />
+            <label>CVV</label>
+            <input type='text' name='cvv' value='123' />
+            <label>Email</label>
+            <input type="text" name="email" value='leonardolouie30@gmail.com'/>
+            <label>Plan</label>
+            <select name="plan">
+            <option value="Monthly-Plan">Monthly Plan</option>
+            <option value="Yearly-Plan">Yearly Plan</option>
+            <option value="One-Off">One-Off</option>
+            </select>
+            <label>Amount</label>
+            <input type='text' name='amount' value='2000000' />
+            <button type='submit'>Pay You</button>
+          </form>)
           )
             : (
               <></>
