@@ -2,7 +2,6 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import Head from 'next/head'
-
 import {LogoJsonLd} from 'next-seo'
 import Header from './Header'
 import Footer from './Footer'
@@ -21,7 +20,7 @@ import './all.css'
 //     marginRight: '-50%',
 //     transform: 'translate(-50%, -50%)'
 //   }
-// }
+// }npm
 
 // Modal.setAppElement('#appElement')
 
@@ -51,12 +50,15 @@ class Layout extends React.Component {
       holder_name: '',
       card_number: '',
       expiration_date: '',
+      plan:'',
+      email:'',
       ccv: '',
       amount: 0,
       currency: 'USD',
+      order_id:'VS-SPARKOL-1',
+      customer_id:'',
       paymentsOsEnv: 'test',
-      idempotency_key: '123456789',
-      isSuccess: false
+      idempotency_key: '123456789'
     }
     this.handleFormOpen = this.handleFormOpen.bind(this)
     this.handleButtonSubmit = this.handleButtonSubmit.bind(this)
@@ -64,6 +66,7 @@ class Layout extends React.Component {
     this.createPayment = this.createPayment.bind(this)
     this.authorize = this.authorize.bind(this)
     // this.charges = this.charges.bind(this)
+    this.createCustomer = this.createCustomer.bind(this)
     this.capture = this.capture.bind(this)
   }
 
@@ -81,7 +84,9 @@ class Layout extends React.Component {
       card_number: e.target.card_number.value,
       expiration_date: e.target.expiration_date.value,
       cvv: e.target.cvv.value,
-      amount: e.target.amount.value
+      amount: e.target.amount.value,
+      email:e.target.email.value,
+      plan:e.target.plan.value
     })
     // calling the tokenize
     this.tokenize()
@@ -113,8 +118,39 @@ class Layout extends React.Component {
     await this.setState({token: data.token, type: data.type})
     console.log(data)
     console.log('Token result is: ' + this.state.token + 'The type is: ' + this.state.type)
-    this.createPayment()
+    //this.createPayment()
+    this.createCustomer()
   }
+
+
+
+    async createCustomer() {
+      console.log(this.state.email)
+      const tokenObj = await fetch('https://api.paymentsos.com/customers', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'private_key': this.state.private_key,
+          'app_id': this.state.app_id,
+          'api-version': '1.2.0',
+          'x-payments-os-env': this.state.paymentsOsEnv
+
+        },
+        body: JSON.stringify({
+          'customer_reference': Math.random()+"1234451112233",
+          'email': this.state.email
+        })
+
+      })
+      const data = await tokenObj.json()
+      console.log("success created");
+      await this.setState({customer_id: data.id})
+      console.log(data.id)
+      //console.log('Token result is: ' + this.state.token + 'The type is: ' + this.state.type)
+      this.createPayment()
+    }
+
+
 
   async createPayment () {
     console.log(this.state)
@@ -130,7 +166,17 @@ class Layout extends React.Component {
       },
       body: JSON.stringify({
         'amount': 2000, // this.state.amount,
-        'currency': this.state.currency
+        'currency': this.state.currency,
+        "order":{
+          "id":this.state.order_id
+        },
+        "customer_id":this.state.customer_id,
+        "additional_details":
+        {
+          "id":this.state.id,
+          "plan":this.state.plan,
+          "payment":this.state.currency+this.state.amount
+      },
       })
     })
     const data = await tokenObj.json()
@@ -189,8 +235,6 @@ class Layout extends React.Component {
     })
     const data = await tokenObj.json()
     console.log(data)
-
-    await this.setState({isSuccess: true})
   }
   render () {
     const {config, children} = this.state.props
@@ -224,27 +268,28 @@ class Layout extends React.Component {
           </div>
           <Header title={title} navItems={mainNavigation} logo={logo} />
           {this.state.formIsOpen ? (
-            this.state.isSuccess ? (
-              <div style={paymentStyle}>
-                <h1>Thank You!</h1>
-                <p>Enjoy your subscription of Videoscribe.</p>
-              </div>
-            ) : (<form id='payment-form' onSubmit={this.handleButtonSubmit} style={paymentStyle}>
-              <img src='https://i.ibb.co/MRXLGb1/buyvs.png' alt='buyvs' border='0' /> <br />
+            <form id='payment-form' onSubmit={this.handleButtonSubmit}>
+              <img src='https://i.ibb.co/MRXLGb1/buyvs.png' alt='buyvs' border='0' />
               <label>Holder Name</label>
-              <input type='text' name='holder_name' value='John Mark' /> <br />
-              <label>Card number</label>
-              <input type='text' name='card_number' value='4111111111111111' /> <br />
+              <input type='text' name='holder_name' value='John Mark' />
+              <label>card number</label>
+              <input type='text' name='card_number' value='4111111111111111' />
               <label>Expiration date</label>
-              <input type='text' name='expiration_date' value='10/29' /> <br />
+              <input type='text' name='expiration_date' value='10/29' />
               <label>CVV</label>
-              <input type='text' name='cvv' value='123' /> <br />
+              <input type='text' name='cvv' value='123' />
+              <label>Email</label>
+              <input type="text" name="email" value='leonardolouie30@gmail.com'/>
+              <label>Plan</label>
+              <select name="plan">
+              <option value="Monthly-Plan">Monthly Plan</option>
+              <option value="Yearly-Plan">Yearly Plan</option>
+              <option value="One-Off">One-Off</option>
+             </select>
               <label>Amount</label>
-              <input type='text' name='amount' value='2000' /> <br />
-
+              <input type='text' name='amount' value='2000' />
               <button type='submit'>Pay You</button>
-            </form>)
-
+            </form>
           )
             : (
               <></>
@@ -263,11 +308,6 @@ var imgStyle = {
   marginLeft: '10%'
 }
 
-var paymentStyle = {
-  display: 'block',
-  textAlign: 'center'
-}
-
 var divStyle = {
   backgroundColor: '#1c202b',
   padding: '8px 0',
@@ -282,7 +322,33 @@ var ulStyle = {
   margin: '0',
   marginTop: '7px',
   padding: '0',
-  width: '45%'
+  width: '25%'
+}
+
+var liStyle = {
+  display: 'inline-block',
+  marginRight: '10%'
+}
+
+var imgStyle = {
+  marginLeft: '10%'
+}
+
+var divStyle = {
+  backgroundColor: '#1c202b',
+  padding: '8px 0',
+  borderBottom: '2px solid #6bbfdb',
+}
+
+var ulStyle = {
+  listStyle: 'none',
+  paddingTop: '8px',
+  float: 'right',
+  color: 'white',
+  margin: '0',
+  marginTop: '7px',
+  padding: '0',
+  width: '25%'
 }
 
 var liStyle = {
