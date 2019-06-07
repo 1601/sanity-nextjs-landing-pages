@@ -282,7 +282,7 @@ var ulStyle = {
   margin: '0',
   marginTop: '7px',
   padding: '0',
-  width: '25%'
+  width: '45%'
 }
 
 var liStyle = {
