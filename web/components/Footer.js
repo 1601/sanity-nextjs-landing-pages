@@ -8,7 +8,7 @@ import SimpleBlockContent from './SimpleBlockContent'
 function Footer (props) {
   const {navItems, text, router} = props
   return (
-    <div className={styles.root}>
+    <div className={`footerSparkol ${styles.root}`}>
       <nav>
         <ul className={styles.items}>
           {navItems &&
@@ -33,6 +33,7 @@ function Footer (props) {
         </ul>
       </nav>
       <div className={styles.text}>
+        <img alt='Sparkol logo' src='https://www.videoscribe.co/App_Themes/Sparkol10/img/sparkol-white.png' width='200' />
         <SimpleBlockContent blocks={text} />
       </div>
     </div>
