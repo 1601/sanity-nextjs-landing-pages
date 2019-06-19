@@ -129,6 +129,8 @@ class Layout extends React.Component {
 
   async handleButtonSubmit (e) {
     e.preventDefault()
+     //triggered processing
+     this.setState({isProcessing:true})
     // passing the value from the form to state
     console.log(e.target.card_number.value)
     await this.setState({
@@ -157,6 +159,7 @@ class Layout extends React.Component {
 
   async tokenize () {
     console.log(this.state)
+
     const tokenObj = await fetch('https://api.paymentsos.com/tokens', {
       method: 'POST',
       headers: {
@@ -305,6 +308,7 @@ class Layout extends React.Component {
     alert('Transaction Successful')
     this.setState({isPaymentNotDone: false})
     console.log(data)
+    this.setState({isSuccess:true})
   }
 
   // visa 4111111111111111 or mastercard 5555555555554444 validation
