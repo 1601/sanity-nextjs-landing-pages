@@ -50,15 +50,22 @@ class Layout extends React.Component {
       holder_name: '',
       card_number: '',
       expiration_date: '',
-      plan:'',
-      email:'',
+      plan: '',
+      email: '',
       ccv: '',
-      amount: 0,
+      amount: 35,
       currency: 'USD',
-      order_id:'VS-SPARKOL-1',
-      customer_id:'',
+      order_id: 'VS-SPARKOL-1',
+      customer_id: '',
       paymentsOsEnv: 'test',
-      idempotency_key: '123456789'
+      idempotency_key: '123456789',
+      error: '',
+      ccAlert: '',
+      cvvAlert: '',
+      emailAlert: '',
+      expiration_dateAlert: '',
+      holderNameAlert: '',
+      isPaymentNotDone: true
     }
     this.handleFormOpen = this.handleFormOpen.bind(this)
     this.handleButtonSubmit = this.handleButtonSubmit.bind(this)
@@ -68,11 +75,56 @@ class Layout extends React.Component {
     // this.charges = this.charges.bind(this)
     this.createCustomer = this.createCustomer.bind(this)
     this.capture = this.capture.bind(this)
+
+    this.handleCCNumber = this.handleCCNumber.bind(this)
+    this.handlePlans = this.handlePlans.bind(this)
+
+    this.handleHolderName = this.handleHolderName.bind(this)
+    this.handleExpirationDate = this.handleExpirationDate.bind(this)
+    this.handleCVV = this.handleCVV.bind(this)
+    this.handleEmail = this.handleEmail.bind(this)
+  }
+
+  handleHolderName (e) {
+    e.preventDefault()
+    if (e.target.value.length > 0) {
+      this.setState({holderNameAlert: 'valid'})
+    } else {
+      this.setState({holderNameAlert: 'invalid'})
+    }
+  }
+
+  handleExpirationDate (e) {
+    e.preventDefault()
+    if (e.target.value.length > 3) {
+      this.setState({expiration_dateAlert: 'valid'})
+    } else {
+      this.setState({expiration_dateAlert: 'invalid'})
+    }
+  }
+
+  handleCVV (e) {
+    e.preventDefault()
+    if (e.target.value.length === 3) {
+      this.setState({cvvAlert: 'valid'})
+    } else {
+      this.setState({cvvAlert: 'invalid'})
+    }
+  }
+
+  handleEmail (e) {
+    e.preventDefault()
+    if (e.target.value.length > 3) {
+      this.setState({emailAlert: 'valid'})
+    } else {
+      this.setState({emailAlert: 'invalid'})
+    }
   }
 
   handleFormOpen (e) {
     e.preventDefault()
-    this.setState({formIsOpen: !this.state.formIsOpen})
+    this.setState({formIsOpen: !this.state.formIsOpen,
+      isPaymentNotDone: true})
   }
 
   async handleButtonSubmit (e) {
@@ -80,16 +132,26 @@ class Layout extends React.Component {
     // passing the value from the form to state
     console.log(e.target.card_number.value)
     await this.setState({
-      holder_name: e.target.holder_name.value,
-      card_number: e.target.card_number.value,
-      expiration_date: e.target.expiration_date.value,
-      cvv: e.target.cvv.value,
-      amount: e.target.amount.value,
-      email:e.target.email.value,
-      plan:e.target.plan.value
+      holder_name: e.target.holder_name.value || '',
+      card_number: e.target.card_number.value || '',
+      expiration_date: e.target.expiration_date.value || '',
+      cvv: e.target.cvv.value || '',
+      amount: e.target.amount.value || 0,
+      email: e.target.email.value || '',
+      plan: e.target.plan.value || ''
     })
-    // calling the tokenize
-    this.tokenize()
+
+    console.log('checker' - this.state.holder_name)
+
+    // validation for null
+    if (this.state.holder_name === '' && this.state.card_number === '' && this.state.expiration_date === '' && this.state.ccv === '' && this.state.email === '') {
+      alert('Try Again - form invalid')
+    } else {
+      //  calling the tokenize
+      this.tokenize()
+    }
+    // // calling the tokenize
+    // this.tokenize()
   }
   // handle tokenize
 
@@ -117,40 +179,43 @@ class Layout extends React.Component {
     const data = await tokenObj.json()
     await this.setState({token: data.token, type: data.type})
     console.log(data)
-    console.log('Token result is: ' + this.state.token + 'The type is: ' + this.state.type)
-    //this.createPayment()
-    this.createCustomer()
+
+    if (data.more_info) {
+      alert(data.more_info)
+    } else {
+      console.log('Token result is: ' + this.state.token + 'The type is: ' + this.state.type)
+      // this.createPayment()
+      alert('Tokenization Successful')
+      this.createCustomer()
+    }
   }
 
+  async createCustomer () {
+    console.log(this.state.email)
+    const tokenObj = await fetch('https://api.paymentsos.com/customers', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'private_key': this.state.private_key,
+        'app_id': this.state.app_id,
+        'api-version': '1.2.0',
+        'x-payments-os-env': this.state.paymentsOsEnv
 
-
-    async createCustomer() {
-      console.log(this.state.email)
-      const tokenObj = await fetch('https://api.paymentsos.com/customers', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'private_key': this.state.private_key,
-          'app_id': this.state.app_id,
-          'api-version': '1.2.0',
-          'x-payments-os-env': this.state.paymentsOsEnv
-
-        },
-        body: JSON.stringify({
-          'customer_reference': Math.random()+"1234451112233",
-          'email': this.state.email
-        })
-
+      },
+      body: JSON.stringify({
+        'customer_reference': Math.random() + '1234451112233',
+        'email': this.state.email
       })
-      const data = await tokenObj.json()
-      console.log("success created");
-      await this.setState({customer_id: data.id})
-      console.log(data.id)
-      //console.log('Token result is: ' + this.state.token + 'The type is: ' + this.state.type)
-      this.createPayment()
-    }
 
-
+    })
+    const data = await tokenObj.json()
+    console.log('success created')
+    await this.setState({customer_id: data.id})
+    console.log(data.id)
+    // console.log('Token result is: ' + this.state.token + 'The type is: ' + this.state.type)
+    alert('Customer Creation Successful')
+    this.createPayment()
+  }
 
   async createPayment () {
     console.log(this.state)
@@ -165,18 +230,18 @@ class Layout extends React.Component {
 
       },
       body: JSON.stringify({
-        'amount': 2000, // this.state.amount,
+        'amount': Number(this.state.amount + '00'),
         'currency': this.state.currency,
-        "order":{
-          "id":this.state.order_id
+        'order': {
+          'id': this.state.order_id
         },
-        "customer_id":this.state.customer_id,
-        "additional_details":
+        'customer_id': this.state.customer_id,
+        'additional_details':
         {
-          "id":this.state.id,
-          "plan":this.state.plan,
-          "payment":this.state.currency+this.state.amount
-      },
+          'id': this.state.id,
+          'plan': this.state.plan,
+          'payment': this.state.currency + this.state.amount
+        }
       })
     })
     const data = await tokenObj.json()
@@ -188,6 +253,8 @@ class Layout extends React.Component {
     console.log(data)
     console.log('charge' + this.state.possible_next_action_href_charge +
                  'authorize: ' + this.state.possible_next_action_href_authorize)
+
+    alert('Payment Sent')
     this.authorize()
   }
 
@@ -218,6 +285,7 @@ class Layout extends React.Component {
     const data = await tokenObj.json()
     console.log(data)
     // this.charges();
+    alert('Transaction Authorized')
     this.capture()
   }
   async capture () {
@@ -234,8 +302,43 @@ class Layout extends React.Component {
       }
     })
     const data = await tokenObj.json()
+    alert('Transaction Successful')
+    this.setState({isPaymentNotDone: false})
     console.log(data)
   }
+
+  // visa 4111111111111111 or mastercard 5555555555554444 validation
+  handleCCNumber (event) {
+    console.log(event.target.value.charAt(0))
+
+    if (event.target.value.length === 16 && event.target.value.charAt(0) === '4') {
+      this.setState({ccAlert: 'Visa'})
+    } else if (event.target.value.length === 16 && String(event.target.value).charAt(0) === '5') {
+      this.setState({ccAlert: 'MasterCard'})
+    } else {
+      this.setState({ccAlert: `${event.target.value.length - 16} - UnknownCardNumber`})
+    }
+  }
+
+  // state changing of amount via monthly plan
+  handlePlans (event) {
+    console.log(event.target.value)
+
+    switch (event.target.value) {
+      case 'Monthly-Plan':
+        this.setState({amount: 35})
+        break
+      case 'Yearly-Plan':
+        this.setState({amount: 14})
+        break
+      case 'One-Off':
+        this.setState({amount: 800})
+        break
+      default:
+        break
+    }
+  }
+
   render () {
     const {config, children} = this.state.props
     if (!config) {
@@ -268,28 +371,36 @@ class Layout extends React.Component {
           </div>
           <Header title={title} navItems={mainNavigation} logo={logo} />
           {this.state.formIsOpen ? (
-            <form id='payment-form' onSubmit={this.handleButtonSubmit}>
-              <img src='https://i.ibb.co/MRXLGb1/buyvs.png' alt='buyvs' border='0' />
-              <label>Holder Name</label>
-              <input type='text' name='holder_name' value='John Mark' />
-              <label>card number</label>
-              <input type='text' name='card_number' value='4111111111111111' />
-              <label>Expiration date</label>
-              <input type='text' name='expiration_date' value='10/29' />
-              <label>CVV</label>
-              <input type='text' name='cvv' value='123' />
-              <label>Email</label>
-              <input type="text" name="email" value='leonardolouie30@gmail.com'/>
-              <label>Plan</label>
-              <select name="plan">
-              <option value="Monthly-Plan">Monthly Plan</option>
-              <option value="Yearly-Plan">Yearly Plan</option>
-              <option value="One-Off">One-Off</option>
-             </select>
-              <label>Amount</label>
-              <input type='text' name='amount' value='2000' />
-              <button type='submit'>Pay You</button>
-            </form>
+            this.state.isPaymentNotDone ? (
+              <form id='payment-form' onSubmit={this.handleButtonSubmit} style={formStyle}>
+                <img src='https://i.ibb.co/MRXLGb1/buyvs.png' alt='buyvs' border='0' /> <br />
+                <label>Holder Name</label>
+                <input type='text' name='holder_name' placeholder='FirstName LastName' onChange={this.handleHolderName} /> <span style={ccNumberStyle}>{this.state.holderNameAlert}</span> <br />
+                <label>Card number</label>
+                <input type='number' name='card_number' placeholder='4111111111111111' onChange={this.handleCCNumber} />  <span style={ccNumberStyle}>{this.state.ccAlert}</span> <br />
+                <label>Expiration date</label>
+                <input type='text' name='expiration_date' placeholder='10/29' onChange={this.handleExpirationDate} /> <span style={ccNumberStyle}>{this.state.expiration_dateAlert}</span> <br />
+                <label>CVV</label>
+                <input type='text' name='cvv' placeholder='123' onChange={this.handleCVV} /> <span style={ccNumberStyle}>{this.state.cvvAlert}</span> <br />
+                <label>Email</label>
+                <input type='text' name='email' placeholder='email@email.com' onChange={this.handleEmail} /> <span style={ccNumberStyle}>{this.state.emailAlert}</span> <br />
+                <label>Plan</label>
+                <select name='plan' onChange={this.handlePlans}>
+                  <option value='Monthly-Plan'>Monthly Plan</option>
+                  <option value='Yearly-Plan'>Yearly Plan</option>
+                  <option value='One-Off'>One-Off</option>
+                </select><br />
+                <label>Amount</label>
+                <input type='text' name='amount' placeholder='14' value={this.state.amount} readOnly /><br />
+                <button type='submit'>Pay You</button> <br />
+                <p>{this.state.error}</p>
+              </form>
+            ) : (
+              <div style={formStyle} >
+                <h1> Thank you for subscribing to Sparkol Videoscribe </h1>
+                <h6> Have fun. </h6>
+              </div>
+            )
           )
             : (
               <></>
@@ -302,6 +413,17 @@ class Layout extends React.Component {
       </>
     )
   }
+}
+
+var ccNumberStyle = {
+  fontSize: '10px',
+  fontStyle: 'italic',
+  color: 'gray'
+}
+
+var formStyle = {
+  display: 'block',
+  textAlign: 'center'
 }
 
 var imgStyle = {
@@ -322,33 +444,7 @@ var ulStyle = {
   margin: '0',
   marginTop: '7px',
   padding: '0',
-  width: '25%'
-}
-
-var liStyle = {
-  display: 'inline-block',
-  marginRight: '10%'
-}
-
-var imgStyle = {
-  marginLeft: '10%'
-}
-
-var divStyle = {
-  backgroundColor: '#1c202b',
-  padding: '8px 0',
-  borderBottom: '2px solid #6bbfdb',
-}
-
-var ulStyle = {
-  listStyle: 'none',
-  paddingTop: '8px',
-  float: 'right',
-  color: 'white',
-  margin: '0',
-  marginTop: '7px',
-  padding: '0',
-  width: '25%'
+  width: '40%'
 }
 
 var liStyle = {
